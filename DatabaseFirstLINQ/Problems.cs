@@ -37,7 +37,8 @@ namespace DatabaseFirstLINQ
             //ProblemNineteen();
             //ProblemTwenty();
             //BonusOne();
-            BonusTwo();
+            //BonusTwo();
+            BonusThree();
         }
 
         // <><><><><><><><> R Actions (Read) <><><><><><><><><>
@@ -327,7 +328,6 @@ namespace DatabaseFirstLINQ
 
             for(int i = 0; i < users.Length; i++)
             {
-                Console.WriteLine(users[i].Email);
                 var userShoppingCart = (decimal)_context.ShoppingCarts.Include(sc => sc.Product).Include(sc => sc.User).Where(sc => sc.User.Email == users[i].Email).Select(sc => sc.Product.Price * sc.Quantity).Sum();
                 totalList.Add(userShoppingCart);
                
@@ -339,12 +339,7 @@ namespace DatabaseFirstLINQ
             }
             Console.WriteLine("Total: " + total);
 
-            //foreach(var cart in shoppingCarts)
-            //{
-            //    Console.WriteLine(cart.User.Email + " " + cart.Product.Name);
-            //    var userEmail = cart.User.Email;
-                
-            //}
+            
 
         }
 
@@ -361,6 +356,134 @@ namespace DatabaseFirstLINQ
             // 3. If the user does not succesfully sing in
             // a. Display "Invalid Email or Password"
             // b. Re-prompt the user for credentials
+
+          
+
+            Console.WriteLine("Please input your email: ");
+            string userEmail = Console.ReadLine();
+            Console.WriteLine("PW: ");
+            string userPW = Console.ReadLine();
+            var user = _context.Users.Where(u => u.Email == userEmail && u.Password == userPW).SingleOrDefault();
+
+            bool signedIn = false;
+            if (user != null)
+            {
+                signedIn = true;
+                Console.WriteLine("Successful sign in!");
+            }
+            else
+            {
+                Console.WriteLine("Invalid email/password");
+            }
+            
+            while (!signedIn)
+            {
+                Console.WriteLine("Please input your email: ");
+                userEmail = Console.ReadLine();
+                Console.WriteLine("PW: ");
+                userPW = Console.ReadLine();
+                user = _context.Users.Where(u => u.Email == userEmail && u.Password == userPW).SingleOrDefault();
+                if (user != null)
+                {
+                    Console.WriteLine(user.Email + " is signed in!");
+                    signedIn = true;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid email/password");
+                    
+                }
+            }
+           
+            
+            
+            bool sessionOpen = true;
+            while (sessionOpen)
+            {
+                Console.WriteLine("\n1: View Cart\n2: View Products\n3: Add Product\n4: Delete Item from Cart\n5: Quit\n\nPlease enter selection: ");
+                var input = Console.ReadLine();
+                switch (input)
+                {
+                    case "1":
+                        var userCart = _context.ShoppingCarts.Include(uc => uc.Product).Where(uc => uc.User.Email == userEmail);
+                        foreach (var item in userCart)
+                        {
+                            Console.WriteLine("Product: " + item.Product.Name + " Quantity: " + item.Quantity);
+                        }
+                        break;
+                    case "2":
+                        var products = _context.Products;
+                        foreach (var product in products)
+                        {
+                            Console.WriteLine(product.Name);
+                        }
+                        break;
+                    case "3":
+                        Console.WriteLine("\nWhich item would you like to add?");
+                        var productsArray = _context.Products.ToArray();
+                        for (int i = 0; i < productsArray.Length; i++)
+                        {
+                            Console.WriteLine((i + 1) + ": " + productsArray[i].Name);
+                        }
+                        var itemInput = int.Parse(Console.ReadLine());
+                        var userCartId = _context.ShoppingCarts.Include(uc => uc.Product).Where(uc => uc.User.Email == userEmail).Select(uc => uc.ProductId);
+                        Console.WriteLine("\nHow many would you like to add?");
+                        var quantity = int.Parse(Console.ReadLine());
+
+                        if (userCartId.Contains(itemInput))
+                        {
+                            var itemCart = _context.ShoppingCarts.Where(i => i.UserId == user.Id && i.ProductId == itemInput).SingleOrDefault();
+                            itemCart.Quantity += quantity;
+                            _context.ShoppingCarts.Update(itemCart);
+                            _context.SaveChanges();
+                            Console.WriteLine("\nItem updated");
+                        }
+                        else
+                        {
+                            ShoppingCart newShoppingCart = new ShoppingCart()
+                            {
+                                UserId = user.Id,
+                                ProductId = itemInput,
+                                Quantity = quantity
+                            };
+                            _context.ShoppingCarts.Add(newShoppingCart);
+                            _context.SaveChanges();
+                            Console.WriteLine("\nItem(s) added");
+                        }
+                        break;
+                    case "4":
+                        var userCartArray = _context.ShoppingCarts.Include(uc => uc.Product).Where(uc => uc.User.Email == userEmail).ToArray();
+                        Console.WriteLine("Which item would you like to remove? (enter item ID)");
+                        for (int i = 0; i < userCartArray.Length; i++)
+                        {
+                            Console.WriteLine(userCartArray[i].ProductId + ": " + userCartArray[i].Product.Name);
+                        }
+                        var itemIdToRemove = int.Parse(Console.ReadLine());
+                        var ItemToRemove = _context.ShoppingCarts.Where(itr => itr.UserId == user.Id && itr.ProductId == itemIdToRemove).SingleOrDefault();
+                        _context.ShoppingCarts.Remove(ItemToRemove);
+                        _context.SaveChanges();
+                        Console.WriteLine("Item successfully removed!");
+                        break;
+                    case "5":
+                        Console.WriteLine("Thank you for using our application!");
+                        sessionOpen = false;
+                        signedIn = false;
+                        break;
+
+                }
+            }
+
+            
+
+
+            
+            
+
+            
+
+
+
+
 
         }
 
