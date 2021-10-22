@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using DatabaseFirstLINQ.Models;
 
@@ -24,7 +25,7 @@ namespace DatabaseFirstLINQ
             //ProblemSeven();
             //ProblemEight();
             //ProblemNine();
-            ProblemTen();
+            //ProblemTen();
             //ProblemEleven();
             //ProblemTwelve();
             //ProblemThirteen();
@@ -35,6 +36,8 @@ namespace DatabaseFirstLINQ
             //ProblemEighteen();
             //ProblemNineteen();
             //ProblemTwenty();
+            //BonusOne();
+            BonusTwo();
         }
 
         // <><><><><><><><> R Actions (Read) <><><><><><><><><>
@@ -296,12 +299,53 @@ namespace DatabaseFirstLINQ
             // Prompt the user to enter in an email and password through the console.
             // Take the email and password and check if the there is a person that matches that combination.
             // Print "Signed In!" to the console if they exists and the values match otherwise print "Invalid Email or Password.".
+            Console.WriteLine("Please input your email: ");
+            string userEmail = Console.ReadLine();
+            Console.WriteLine("PW: ");
+            string userPW = Console.ReadLine();
+            var user = _context.Users.Where(u => u.Email == userEmail).SingleOrDefault();
+            if (user != null)
+            {
+                Console.WriteLine(user.Email + " is signed in!");
+            }
+            else
+            {
+                Console.WriteLine("There is no user with that email!");
+            }
+
         }
 
         private void BonusTwo()
         {
             // Write a query that finds the total of every users shopping cart products using LINQ.
             // Display the total of each users shopping cart as well as the total of the toals to the console.
+            var users = _context.Users.ToArray();
+            var shoppingCarts = _context.ShoppingCarts.Include(sc => sc.Product).Include(sc => sc.User);
+            var cartIndex = _context.ShoppingCarts.Include(sc => sc.Product).Include(sc => sc.User).FirstOrDefault();
+            List<decimal> totalList = new List<decimal>();
+            decimal total = 0;
+
+            for(int i = 0; i < users.Length; i++)
+            {
+                Console.WriteLine(users[i].Email);
+                var userShoppingCart = (decimal)_context.ShoppingCarts.Include(sc => sc.Product).Include(sc => sc.User).Where(sc => sc.User.Email == users[i].Email).Select(sc => sc.Product.Price * sc.Quantity).Sum();
+                totalList.Add(userShoppingCart);
+               
+            }
+            foreach(var list in totalList)
+            {
+                Console.WriteLine(list);
+                total += list;
+            }
+            Console.WriteLine("Total: " + total);
+
+            //foreach(var cart in shoppingCarts)
+            //{
+            //    Console.WriteLine(cart.User.Email + " " + cart.Product.Name);
+            //    var userEmail = cart.User.Email;
+                
+            //}
+
         }
 
         // BIG ONE
